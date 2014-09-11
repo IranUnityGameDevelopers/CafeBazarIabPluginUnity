@@ -1,4 +1,3 @@
-BaseProject
+Cafe Bazar IAB Plugin
 ===========
-
-This is a base project for all projects of this organization.
+This is Trivial Drive Project on Unity with Cafe Bazar IAB
