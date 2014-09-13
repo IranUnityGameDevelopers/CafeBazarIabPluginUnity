@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 public class StoreHandler : MonoBehaviour {
 
+	public bool DebugMode;
+
 	/////// Trivial Drive Code
 	public Image _Image;
 	public Sprite PremiumImage;
@@ -29,7 +31,15 @@ public class StoreHandler : MonoBehaviour {
 		                                        , Base64EncodedPublicKey 
 		                                        , Payload 
 		                                        , UnityPlayer.GetStatic<AndroidJavaObject>("currentActivity"));
-		StoreController.Call("startSetup");
+		string _debugmode;
+		if (DebugMode == true) {
+			_debugmode = "TRUE";
+		}
+		else{
+			_debugmode = "";
+		}
+
+		StoreController.Call("startSetup" , new AndroidJavaObject("java.lang.String" , _debugmode) );
 	}
 	
 
@@ -52,7 +62,11 @@ public class StoreHandler : MonoBehaviour {
 
 		/////// Trivial Drive Code
 
-		if (sku == "premium") {
+		if (sku == "gas") {
+			StoreController.Call("Consume" , new AndroidJavaObject("java.lang.String" , sku));
+			ItemsConsuming++;
+		}
+		else if (sku == "premium") {
 			_Image.sprite = PremiumImage;
 			BuyPremiumButton.enabled = false;
 		}	
@@ -88,26 +102,26 @@ public class StoreHandler : MonoBehaviour {
 		GetPurchasesFinished();
 	}
 
-	public void PurchaseFinished(string sku)
-	{
-		ActivityIndicator.Instance.Hide();
-		// check if consumable do nothing
-		// else do the job :D
-
-		/////// Trivial Drive Code
-		if (sku != "gas") {
-			ErrorOverlay.Instance.ShowOverlay("Consumed : " + sku);
-		}
-		if (sku == "premium") {
-			_Image.sprite = PremiumImage;
-			BuyPremiumButton.enabled = false;
-		}	
-		else if (sku == "infinite_gas") {
-			BuyInfiniteGas.enabled = false;
-		}
-		///  end of Trivial Drive Code
-
-	}
+//	public void PurchaseFinished(string sku)
+//	{
+//		ActivityIndicator.Instance.Hide();
+//		// check if consumable do nothing
+//		// else do the job :D
+//
+//		/////// Trivial Drive Code
+//		if (sku != "gas") {
+//			ErrorOverlay.Instance.ShowOverlay("Consumed : " + sku);
+//		}
+//		if (sku == "premium") {
+//			_Image.sprite = PremiumImage;
+//			BuyPremiumButton.enabled = false;
+//		}	
+//		else if (sku == "infinite_gas") {
+//			BuyInfiniteGas.enabled = false;
+//		}
+//		///  end of Trivial Drive Code
+//
+//	}
 
 	public void Purchase(ShopItem item)
 	{
