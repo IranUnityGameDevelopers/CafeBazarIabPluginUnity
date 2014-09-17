@@ -4,7 +4,7 @@ This is Trivial Drive Project on Unity with Cafe Bazar IAB
 
 Unity ver : 4.6b
 
-Java Plugin : https://github.com/IranUnityGameDevelopers/CafeBazarIabPluginJavaCode
+Java Plugin Source : https://github.com/IranUnityGameDevelopers/CafeBazarIabPluginJavaCode
 
 # Issues: 
 
