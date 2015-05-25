@@ -2,11 +2,11 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class ErrorOverlay : MonoBehaviour {
+public class Overlay : MonoBehaviour {
 
-	public static ErrorOverlay Instance;
+	public static Overlay Instance;
 	
-	public GameObject Overlay;
+	public GameObject _Overlay;
 
 	public Text OverlayText;
 
@@ -17,12 +17,12 @@ public class ErrorOverlay : MonoBehaviour {
 
 	public void ShowOverlay(string _Text)
 	{
-		Overlay.SetActive(true);
+		_Overlay.SetActive(true);
 		OverlayText.text = _Text;
 	}
 
 	public void HideOverlay()
 	{
-		Overlay.SetActive(false);
+		_Overlay.SetActive(false);
 	}
 }

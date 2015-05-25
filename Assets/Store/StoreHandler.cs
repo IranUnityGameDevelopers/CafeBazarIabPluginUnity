@@ -1,36 +1,37 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-/////// Trivial Drive Code
-using UnityEngine.UI;
-///  end of Trivial Drive Code
-
 public class StoreHandler : MonoBehaviour {
 
-	public bool DebugMode;
+	private static StoreHandler _instance;
+	public static StoreHandler Instance {
+		get {
+			if (_instance == null) {
+				_instance = GameObject.FindObjectOfType<StoreHandler>();
+			}
+			return _instance;
+		}
+	}
 
-	/////// Trivial Drive Code
-	public Image _Image;
-	public Sprite PremiumImage;
-	public Button BuyPremiumButton;
-	public Button BuyInfiniteGas;
-	///  end of Trivial Drive Code
+	public bool StoreStarted = false;
+	public bool DebugMode;
 
 	//&& !UNITY_EDITOR
 #if UNITY_ANDROID 
-	private string Base64EncodedPublicKey = "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwDgLxZsZomrmatxmihzk/bypxJXRiegmcmZyirjzlVFZ4vyxmtjjqPvJFwyZeyEW/vXHBlxaF7WaDk1SknUF+eDfh2hYDrQW+ctYve4eZ0oI78lns0yJKUVLh7K91d1ExJdDYo7W+s3pDy1OiGwOLmdTZXsf9bEazGcynXqQrwCK0BGMO40FL67VFdLgoMiaKajwlmMbwuJsy9pBsI2eq2AXTaga4u/yf1fEdGOfEsCAwEAAQ==";
-	private string Payload = "Payload";
-	private int ItemsConsuming = 0;
-	private AndroidJavaObject StoreController;
-	
-	public void StartStore () {
-		ActivityIndicator.Instance.Show();
-		AndroidJavaClass UnityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
 
-		StoreController = new AndroidJavaObject("ir.unity3d.cafebazarplugin.StoreController" 
-		                                        , Base64EncodedPublicKey 
-		                                        , Payload 
-		                                        , UnityPlayer.GetStatic<AndroidJavaObject>("currentActivity"));
+	public const int BILLING_RESPONSE_RESULT_OK = 0;
+
+
+	private string Base64EncodedPublicKey = "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwDqcvluFwhix7+hEI9m9ZWEyfSLX1BfvpIrnUzKGGjCHaF/vDnX0p6gr0a4PhgUC8ug2UyITDjaWhtfyRkBs01ZNWofz0Da85jduAnvPmI0mTvtMjhg94llHbYk+V9GpSaWvJpqCVQAT0V5caS8LKptFe7QrDEEcfF+KJtd33RxoyC7rVyPtw36E/h71TvCt2LvUajx9kWonmlih4p7LbGnkBemzeaUFNu8VO1dlvsCAwEAAQ==";
+	private string Payload = "Payload";
+	private AndroidJavaObject StoreController;
+	private IStoreEventHandler EventHandler;
+	
+	public void StartStore (IStoreEventHandler _eventHandler) {
+		if (_eventHandler == null) {
+			return;
+		}
+		EventHandler = _eventHandler;
 		string _debugmode;
 		if (DebugMode == true) {
 			_debugmode = "TRUE";
@@ -39,102 +40,170 @@ public class StoreHandler : MonoBehaviour {
 			_debugmode = "";
 		}
 
-		StoreController.Call("startSetup" , new AndroidJavaObject("java.lang.String" , _debugmode) );
-	}
-	
 
+		AndroidJavaClass UnityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+
+
+		StoreController = new AndroidJavaObject("ir.unity3d.cafebazarplugin.StoreController");
+
+
+		StoreController.Call("startSetup", Base64EncodedPublicKey 
+					                     , Payload 
+					                     , UnityPlayer.GetStatic<AndroidJavaObject>("currentActivity")
+					                     , new AndroidJavaObject("java.lang.String" , _debugmode) );
+
+	}
+
+	public void SetupSuccessful()
+	{
+		StoreStarted = true;
+		if (EventHandler != null) {
+			EventHandler.OnSetupSuccessful();
+		}
+	}
+
+
+	public void GetPurchases()
+	{
+		if (StoreStarted) {
+			StoreController.Call("QueryInventory");
+		}
+	}
+
+	public void Consume(string sku)
+	{
+		if (StoreStarted) {
+			StoreController.Call("Consume" , new AndroidJavaObject("java.lang.String" , sku));
+		}
+	}
 
 	public void OnError(string message)
 	{
-		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message);
-		ErrorOverlay.Instance.ShowOverlay(message);
+		if (EventHandler != null) {
+
+			string[] msg = message.Split('@');
+
+			StoreErrorCodes errorCode = StoreErrorCodes.DONOTHING;
+
+			int result = 0;
+			if (int.TryParse(msg[msg.Length - 1] ,out result)) {
+				errorCode = (StoreErrorCodes) result;
+			}
+			
+
+
+			string sku = "";
+
+			if (message.Split('{', '}').Length > 1) {
+				sku = message.Split('{', '}')[1] == null ? "" : message.Split('{', '}')[1];
+			}
+
+
+
+
+			if (errorCode == StoreErrorCodes.BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE 
+			    || errorCode == StoreErrorCodes.IABHELPER_ERROR_BASE
+			    || errorCode == StoreErrorCodes.IABHELPER_SEND_INTENT_FAILED
+			    || errorCode == StoreErrorCodes.IABHELPER_REMOTE_EXCEPTION) {
+				EventHandler.OnProblemSettingUpIAB(msg[0] , errorCode);
+			}
+			else if (errorCode == StoreErrorCodes.IABHELPER_INVALID_CONSUMPTION)
+			{
+				EventHandler.OnFailedToConsumePurchase(msg[0] , errorCode , sku);
+			}
+			else if (errorCode == StoreErrorCodes.IABHELPER_MISSING_TOKEN)
+			{
+				EventHandler.OnMissingToken(msg[0] , errorCode , sku);
+			}
+			else if (errorCode == StoreErrorCodes.IABHELPER_PURCHASE_PAYLOAD_VERIFICATION_FAILED
+			         || errorCode == StoreErrorCodes.IABHELPER_VERIFICATION_FAILED) {
+				EventHandler.OnPurchasePayloadVerificationFailed(msg[0] , errorCode , sku);
+			}
+			else if (errorCode == StoreErrorCodes.IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE) {
+				EventHandler.OnSubscriptionNotAvilable(msg[0] , errorCode , sku);
+			}
+			else if (errorCode == StoreErrorCodes.IABHELPER_UNKNOWN_PURCHASE_RESPONSE) {
+				EventHandler.OnPurchaseFailed(msg[0] , errorCode , sku);
+			}
+			else if (errorCode == StoreErrorCodes.IABHELPER_USER_CANCELLED) {
+				EventHandler.OnUserCancelled(msg[0] , errorCode , sku);
+			}
+			else if (errorCode == StoreErrorCodes.IABHELPER_BAD_RESPONSE
+			         || errorCode == StoreErrorCodes.IABHELPER_UNKNOWN_ERROR) {
+				EventHandler.OnUnknownError(errorCode , msg[0] , sku);
+			}
+		}
 	}
-
-	/// <summary>
-	/// Called from java code when startSetup() is called
-	/// this function we be called for every purc
-	/// </summary>
-	/// <param name="SKU">SK.</param>
-	public void ProcessPurchase(string sku)
+	
+	public void GetPurchasesFinished(string allRawSKU)
 	{
-		// check for Consumables and Consume them and increase ItemsConsuming
+		if (EventHandler != null) {
 
-		/////// Trivial Drive Code
-
-		if (sku == "gas") {
-			StoreController.Call("Consume" , new AndroidJavaObject("java.lang.String" , sku));
-			ItemsConsuming++;
-		}
-		else if (sku == "premium") {
-			_Image.sprite = PremiumImage;
-			BuyPremiumButton.enabled = false;
-		}	
-		else if (sku == "infinite_gas") {
-			BuyInfiniteGas.enabled = false;
-		}
-		///  end of Trivial Drive Code
-
-	}
-
-	public void GetPurchasesFinished()
-	{
-		if (ItemsConsuming > 0) {
-			// Do nothing
-		}
-		else if (ItemsConsuming == 0)
-		{
-			// Update UI
-			ActivityIndicator.Instance.Hide();
-			ErrorOverlay.Instance.ShowOverlay("GetPurchases Finished");
+			if (allRawSKU == "") {
+				//purchase is null or Payloads dosnt match 
+				EventHandler.OnGetPurchasesFinished("" , 0);
+			}
+			else
+			{
+				string[] allSKU = allRawSKU.Split(',');
+				int count = 0;
+				for (int i = 0; i < allSKU.Length; i++) {
+					if (allSKU[i].Trim() != "") {
+						EventHandler.ProcessPurchase(allSKU[i].Trim());
+						count++;
+					}
+				}
+				EventHandler.OnGetPurchasesFinished(allRawSKU , count);
+			}
 		}
 	}
 
 	public void ConsumeFinished(string sku)
 	{
-		ErrorOverlay.Instance.ShowOverlay("Consumed : " + sku);
-		/////// Trivial Drive Code
-		GameHandler.Instance.GasBought();
-		///  end of Trivial Drive Code
-
-		// consume object then do the following
-		ItemsConsuming--;
-		GetPurchasesFinished();
+		if (EventHandler != null) {
+			EventHandler.OnConsumeFinished(sku);
+		}
 	}
-
-//	public void PurchaseFinished(string sku)
-//	{
-//		ActivityIndicator.Instance.Hide();
-//		// check if consumable do nothing
-//		// else do the job :D
-//
-//		/////// Trivial Drive Code
-//		if (sku != "gas") {
-//			ErrorOverlay.Instance.ShowOverlay("Consumed : " + sku);
-//		}
-//		if (sku == "premium") {
-//			_Image.sprite = PremiumImage;
-//			BuyPremiumButton.enabled = false;
-//		}	
-//		else if (sku == "infinite_gas") {
-//			BuyInfiniteGas.enabled = false;
-//		}
-//		///  end of Trivial Drive Code
-//
-//	}
 
 	public void Purchase(ShopItem item)
 	{
-		ActivityIndicator.Instance.Show();
-		Debug.Log("Purchase Called with SKU :" + item.SKU);
-		if (item._Type == ShopItemType.inapp) {
-			StoreController.Call("launchPurchaseFlow" , new AndroidJavaObject("java.lang.String" , item.SKU));
-		}
-		else if (item._Type == ShopItemType.subs) {
-			StoreController.Call("launchSubscriptionPurchaseFlow" , new AndroidJavaObject("java.lang.String" , item.SKU));
+		StartCoroutine(delay());
+		if (StoreStarted) {	
+			if (item._Type == ShopItemType.inapp) {
+				StoreController.Call("launchPurchaseFlow" , new AndroidJavaObject("java.lang.String" , item.SKU));
+			}
+			else if (item._Type == ShopItemType.subs) {
+				StoreController.Call("launchSubscriptionPurchaseFlow" , new AndroidJavaObject("java.lang.String" , item.SKU));
+			}
 		}
 
 	}
+
+	IEnumerator delay()
+	{
+		yield return new WaitForSeconds(1);
+	}
 #endif
 
+}
+
+/// <summary>
+/// 	Billing response codes
+/// </summary>
+public enum StoreErrorCodes
+{
+	DONOTHING = 0,
+	BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE = 3,
+	IABHELPER_ERROR_BASE = -1000,
+	IABHELPER_REMOTE_EXCEPTION = -1001,
+	IABHELPER_BAD_RESPONSE = -1002,
+	IABHELPER_VERIFICATION_FAILED = -1003,
+	IABHELPER_SEND_INTENT_FAILED = -1004,
+	IABHELPER_USER_CANCELLED = -1005,
+	IABHELPER_UNKNOWN_PURCHASE_RESPONSE = -1006,
+	IABHELPER_MISSING_TOKEN = -1007,
+	IABHELPER_UNKNOWN_ERROR = -1008,
+	IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE = -1009,
+	IABHELPER_INVALID_CONSUMPTION = -1010,
+	IABHELPER_PURCHASE_PAYLOAD_VERIFICATION_FAILED = -1011,
 }
