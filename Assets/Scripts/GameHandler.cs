@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using CafeBazarIab;
 
 public class GameHandler : MonoBehaviour {
 
@@ -17,7 +18,7 @@ public class GameHandler : MonoBehaviour {
 	void Awake()
 	{
 		Instance = this;
-		StoreHandler.Instance.StartStore(eventHandler);
+		StoreHandler.Instance.StartStore(eventHandler , "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwDqcvluFwhix7+hEI9m9ZWEyfSLX1BfvpIrnUzKGGjCHaF/vDnX0p6gr0a4PhgUC8ug2UyITDjaWhtfyRkBs01ZNWofz0Da85jduAnvPmI0mTvtMjhg94llHbYk+V9GpSaWvJpqCVQAT0V5caS8LKptFe7QrDEEcfF+KJtd33RxoyC7rVyPtw36E/h71TvCt2LvUajx9kWonmlih4p7LbGnkBemzeaUFNu8VO1dlvsCAwEAAQ==" , "Payload");
 	}
 
 	public void Drive()

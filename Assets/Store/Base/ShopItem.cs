@@ -1,15 +1,18 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ShopItem : MonoBehaviour {
+namespace CafeBazarIab
+{
+	[System.Serializable]
+	public class ShopItem : MonoBehaviour {
+		public string SKU;
+		public ShopItemType _Type;
+	}
 
-	public string SKU;
-	public ShopItemType _Type;
 
-}
+	public enum ShopItemType {
+		inapp ,
+		subs ,
+	}
 
-
-public enum ShopItemType {
-	inapp ,
-	subs ,
 }
