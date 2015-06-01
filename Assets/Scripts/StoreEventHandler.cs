@@ -22,22 +22,22 @@ public class StoreEventHandler : MonoBehaviour , IStoreEventHandler {
 		StoreHandler.Instance.GetPurchases();
 	}
 
-	public void ProcessPurchase (string sku)
+	public void ProcessPurchase (ShopItem item)
 	{
 		// check for Consumables and Consume them and increase ItemsConsuming
 		
-		Debug.Log("process purchase called for sku : " + sku);
+		Debug.Log("process purchase called for sku : " + item.SKU);
 		/////// Trivial Drive Code
 		
-		if (sku == "gas") {
-			StoreHandler.Instance.Consume(sku);
+		if (item.SKU == "gas") {
+			StoreHandler.Instance.Consume(item);
 		}
-		else if (sku == "premium") {
+		else if (item.SKU == "premium") {
 			_Image.sprite = PremiumImage;
 			GameHandler.Instance.isPremium = true;
 			BuyPremiumButton.SetActive(false);
 		}	
-		else if (sku == "infinite_gas") {
+		else if (item.SKU == "infinite_gas") {
 			gasSprite.sprite = gasInfinite;
 			GameHandler.Instance.isInfiniteGas = true;
 			BuyInfiniteGas.SetActive(false);
@@ -45,13 +45,13 @@ public class StoreEventHandler : MonoBehaviour , IStoreEventHandler {
 		///  end of Trivial Drive Code
 	}
 
-	public void OnConsumeFinished (string sku)
+	public void OnConsumeFinished (ShopItem item)
 	{
-		Debug.Log("consume finished called for sku : " + sku);
+		Debug.Log("consume finished called for sku : " + item.SKU);
 		
-		Overlay.Instance.ShowOverlay("Consumed : " + sku);
+		Overlay.Instance.ShowOverlay("Consumed : " + item.SKU);
 		/////// Trivial Drive Code
-		if (sku == "gas") {
+		if (item.SKU == "gas") {
 			GameHandler.Instance.GasBought();
 		}
 		///  end of Trivial Drive Code
@@ -76,53 +76,53 @@ public class StoreEventHandler : MonoBehaviour , IStoreEventHandler {
 		Debug.LogError(message + ", error code : " + errorCode);
 		Overlay.Instance.ShowOverlay(message+ ", error code : " + errorCode);
 	}
-	public void OnMissingToken (string message, StoreErrorCodes errorCode, string sku = "")
+	public void OnMissingToken (string message, StoreErrorCodes errorCode, ShopItem item = null)
 	{
 		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + sku);
-		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + sku);
+		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
+		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
 	}
-	public void OnSubscriptionNotAvilable (string message, StoreErrorCodes errorCode, string sku = "")
+	public void OnSubscriptionNotAvilable (string message, StoreErrorCodes errorCode, ShopItem item = null)
 	{
 		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + sku);
-		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + sku);
+		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
+		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
 	}
-	public void OnFailedToConsumePurchase (string message, StoreErrorCodes errorCode, string sku = "")
+	public void OnFailedToConsumePurchase (string message, StoreErrorCodes errorCode, ShopItem item = null)
 	{
 		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + sku);
-		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + sku);
+		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
+		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
 	}
-	public void OnConsumeFinishedListenerError (string message, StoreErrorCodes errorCode, string sku = "")
+	public void OnConsumeFinishedListenerError (string message, StoreErrorCodes errorCode, ShopItem item = null)
 	{
 		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + sku);
-		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + sku);
+		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
+		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
 	}
-	public void OnPurchaseFailed (string message, StoreErrorCodes errorCode, string sku = "")
+	public void OnPurchaseFailed (string message, StoreErrorCodes errorCode, ShopItem item = null)
 	{
 		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + sku);
-		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + sku);
+		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
+		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
 	}
-	public void OnPurchasePayloadVerificationFailed (string message, StoreErrorCodes errorCode, string sku = "")
+	public void OnPurchasePayloadVerificationFailed (string message, StoreErrorCodes errorCode, ShopItem item = null)
 	{
 		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + sku);
-		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + sku);
+		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
+		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
 	}
-	public void OnUserCancelled(string message, StoreErrorCodes errorCode , string sku = "")
+	public void OnUserCancelled(string message, StoreErrorCodes errorCode, ShopItem item = null)
 	{
 		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + sku);
-		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + sku);
+		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
+		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
 	}
-	public void OnUnknownError (StoreErrorCodes errorCode , string message = "" , string sku = "")
+	public void OnUnknownError (StoreErrorCodes errorCode , string message = "" , ShopItem item = null)
 	{
 		ActivityIndicator.Instance.Hide();
-		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + sku);
-		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + sku);
+		Debug.LogError(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
+		Overlay.Instance.ShowOverlay(message + ", error code : " + errorCode + ", with sku : " + item.SKU);
 	}
 	#endregion
 }
