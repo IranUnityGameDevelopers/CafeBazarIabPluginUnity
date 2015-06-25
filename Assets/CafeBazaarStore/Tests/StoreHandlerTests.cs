@@ -9,7 +9,7 @@ namespace CafeBazarIab
 	/// </summary>
 	public class StoreHandlerTests : MonoBehaviour {
 
-
+		#if UNITY_ANDROID
 		void OnEnable() {
 			//TestConsumeFinished();
 			//TestGetPurchasesFinished();
@@ -63,6 +63,8 @@ namespace CafeBazarIab
 			Debug.Log (StoreHandler.Instance.GetShopItemBySKU("gas")._Type);
 			Debug.Log (StoreHandler.Instance.GetShopItemBySKU("infinite_gas")._Type);
 		}
+
+		#endif
 	}
 
 }

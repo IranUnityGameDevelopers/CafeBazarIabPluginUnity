@@ -17,9 +17,9 @@ namespace CafeBazarIab
 			}
 		}
 
-		private bool StoreStarted = false;
 		public bool DebugMode;
-		public List<ShopItem> shopItems;
+		private bool StoreStarted = false;
+		private List<ShopItem> shopItems;
 
 		//&& !UNITY_EDITOR
 		#if UNITY_ANDROID 
@@ -31,6 +31,7 @@ namespace CafeBazarIab
 		private string Payload;
 		private AndroidJavaObject StoreController;
 		private IStoreEventHandler EventHandler;
+		private List<Purchase> cachedPurchaseList;
 
 
 		/// <summary>
@@ -56,6 +57,11 @@ namespace CafeBazarIab
 				return;
 			}
 			EventHandler = _eventHandler;
+
+			shopItems = new List<ShopItem>();
+
+			shopItems = gameObject.GetComponentsInChildren<ShopItem>().ToList();
+
 			string _debugmode;
 			if (DebugMode == true) {
 				_debugmode = "TRUE";
@@ -102,6 +108,14 @@ namespace CafeBazarIab
 			return item.First();
 		}
 
+		public Purchase GetPurchaseBySKU(string _sku)
+		{
+			var item = from element in cachedPurchaseList
+				where element.Sku == _sku
+					select element;
+			return item.First();
+		}
+
 
 		/// <summary>
 		/// Gets the purchases.
@@ -117,10 +131,10 @@ namespace CafeBazarIab
 		/// Consume the specified shopItem.
 		/// </summary>
 		/// <param name="sku">Sku.</param>
-		public void Consume(ShopItem item)
+		public void Consume(Purchase item)
 		{
 			if (StoreStarted) {
-				StoreController.Call("Consume" , new AndroidJavaObject("java.lang.String" , item.SKU));
+				StoreController.Call("Consume" , new AndroidJavaObject("java.lang.String" , item.Sku));
 			}
 		}
 
@@ -185,26 +199,37 @@ namespace CafeBazarIab
 		/// Get the purchases finished event , called from java plugin.
 		/// </summary>
 		/// <param name="allRawSKU">All raw SK</param>
-		public void GetPurchasesFinished(string allRawSKU)
+		public void GetPurchasesFinished(string JsonArray)
 		{
-			if (EventHandler != null) {
+			if (EventHandler == null) {
+				return;
+			}
 
-				if (allRawSKU == "") {
-					//purchase is null or Payloads dosnt match 
-					EventHandler.OnGetPurchasesFinished("" , 0);
+			JSONObject jsonObject = new JSONObject(JsonArray);
+			cachedPurchaseList = new List<Purchase>();
+
+			if (jsonObject.type == JSONObject.Type.ARRAY) {
+
+				for (int i = 0; i < jsonObject.list.Count; i++) {
+					Purchase p = new Purchase();
+					p.ItemType = jsonObject.list[i]["ItemType"].str;
+					p.OrderId = jsonObject.list[i]["OrderId"].str;
+					p.PurchaseTime = jsonObject.list[i]["PurchaseTime"].n;
+					p.Signature = jsonObject.list[i]["Signature"].str;
+					p.Token = jsonObject.list[i]["Token"].str;
+					p.DeveloperPayload = jsonObject.list[i]["DeveloperPayload"].str;
+					p.PurchaseState = jsonObject.list[i]["PurchaseState"].n;
+					p.PackageName = jsonObject.list[i]["PackageName"].str;
+					p.OriginalJson = jsonObject.list[i]["OriginalJson"].str;
+					p.Sku = jsonObject.list[i]["Sku"].str;
+					cachedPurchaseList.Add(p);
+					EventHandler.ProcessPurchase(p);
 				}
-				else
-				{
-					string[] allSKU = allRawSKU.Split(',');
-					int count = 0;
-					for (int i = 0; i < allSKU.Length; i++) {
-						if (allSKU[i].Trim() != "") {
-							EventHandler.ProcessPurchase(GetShopItemBySKU(allSKU[i].Trim()));
-							count++;
-						}
-					}
-					EventHandler.OnGetPurchasesFinished(allRawSKU , count);
-				}
+				EventHandler.OnGetPurchasesFinished(JsonArray , jsonObject.list.Count);
+			}
+			else
+			{
+				EventHandler.OnGetPurchasesFinished(JsonArray , 0);
 			}
 		}
 
@@ -215,7 +240,7 @@ namespace CafeBazarIab
 		public void ConsumeFinished(string sku)
 		{
 			if (EventHandler != null) {
-				EventHandler.OnConsumeFinished(GetShopItemBySKU(sku));
+				EventHandler.OnConsumeFinished(GetPurchaseBySKU(sku));
 			}
 		}
 

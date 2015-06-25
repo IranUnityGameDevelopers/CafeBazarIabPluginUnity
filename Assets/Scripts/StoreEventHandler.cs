@@ -22,22 +22,22 @@ public class StoreEventHandler : MonoBehaviour , IStoreEventHandler {
 		StoreHandler.Instance.GetPurchases();
 	}
 
-	public void ProcessPurchase (ShopItem item)
+	public void ProcessPurchase (Purchase item)
 	{
 		// check for Consumables and Consume them and increase ItemsConsuming
 		
-		Debug.Log("process purchase called for sku : " + item.SKU);
+		Debug.Log("process purchase called for sku : " + item.Sku);
 		/////// Trivial Drive Code
 		
-		if (item.SKU == "gas") {
+		if (item.Sku == "gas") {
 			StoreHandler.Instance.Consume(item);
 		}
-		else if (item.SKU == "premium") {
+		else if (item.Sku == "premium") {
 			_Image.sprite = PremiumImage;
 			GameHandler.Instance.isPremium = true;
 			BuyPremiumButton.SetActive(false);
 		}	
-		else if (item.SKU == "infinite_gas") {
+		else if (item.Sku == "infinite_gas") {
 			gasSprite.sprite = gasInfinite;
 			GameHandler.Instance.isInfiniteGas = true;
 			BuyInfiniteGas.SetActive(false);
@@ -45,13 +45,13 @@ public class StoreEventHandler : MonoBehaviour , IStoreEventHandler {
 		///  end of Trivial Drive Code
 	}
 
-	public void OnConsumeFinished (ShopItem item)
+	public void OnConsumeFinished (Purchase item)
 	{
-		Debug.Log("consume finished called for sku : " + item.SKU);
+		Debug.Log("consume finished called for sku : " + item.Sku);
 		
-		Overlay.Instance.ShowOverlay("Consumed : " + item.SKU);
+		Overlay.Instance.ShowOverlay("Consumed : " + item.Sku);
 		/////// Trivial Drive Code
-		if (item.SKU == "gas") {
+		if (item.Sku == "gas") {
 			GameHandler.Instance.GasBought();
 		}
 		///  end of Trivial Drive Code

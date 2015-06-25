@@ -92,7 +92,6 @@ namespace CafeBazarIab
 
 
 				GUILayout.BeginHorizontal();
-				GUILayout.FlexibleSpace();
 
 				shopitem.SKU = EditorGUILayout.TextField(shopitem.SKU , GUILayout.Height(itemsHeight));
 
@@ -112,16 +111,6 @@ namespace CafeBazarIab
 
 				GUILayout.FlexibleSpace();
 				GUILayout.EndHorizontal();
-
-			//	GUI.Label(addPadding( new Rect((Screen.width - 30)/2 + 0f, 300f + i * itemsPadding, 30f, 30f),10 , 30 , 160), new GUIContent(items[i].GetComponent<ShopItem>()._Type.ToString(), null, ""));
-				
-//				GUI.Label( new Rect((Screen.width - 30)/2 + -160f, 300f+ i * itemsPadding, 30f, 30f), new GUIContent(items[i].GetComponent<ShopItem>().SKU, null, ""));
-//				
-//				if(GUI.Button( new Rect((Screen.width - 50)/2 + 150f, 300f+ i * itemsPadding, 50f, 30f), new GUIContent("Delete", null, "")))
-//				{
-//					removeItem(i);
-//
-//				}
 			}
 
 			EditorGUILayout.EndScrollView();
@@ -134,11 +123,9 @@ namespace CafeBazarIab
 		void refreshItems ()
 		{
 			StoreHandler storeHandler = GameObject.FindObjectOfType<StoreHandler>();
-			storeHandler.shopItems = new List<ShopItem>();
 			items.Clear();
 			for (int i = 0; i < storeHandler.gameObject.transform.childCount; i++) {
 				items.Add(storeHandler.gameObject.transform.GetChild(i).gameObject);
-				storeHandler.shopItems.Add(items[i].GetComponent<ShopItem>());
 			}
 
 		}
@@ -163,8 +150,8 @@ namespace CafeBazarIab
 		void removeItem (int i)
 		{
 			string objectName = items[i].name;
-			items.RemoveAt(i);
 			DestroyImmediate(GameObject.Find(objectName));
+			refreshItems();
 		}		
 		
 		
@@ -177,8 +164,7 @@ namespace CafeBazarIab
 			newShopItemObject.GetComponent<ShopItem>().SKU = "NewItem";
 			newShopItemObject.GetComponent<ShopItem>()._Type = ShopItemType.inapp;
 			newShopItemObject.transform.parent = storeHandler.gameObject.transform;
-			items.Add(newShopItemObject);
-			index++;
+			refreshItems();
 			//Debug.Log (index + " , " + texts.Count + " , " + times.Count);
 		}
 

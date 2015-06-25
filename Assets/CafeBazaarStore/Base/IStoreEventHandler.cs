@@ -6,11 +6,11 @@ namespace CafeBazarIab
 
 	public interface IStoreEventHandler  {
 
-		void ProcessPurchase(ShopItem item);
+		void ProcessPurchase(Purchase item);
 
-		void OnConsumeFinished(ShopItem item);
+		void OnConsumeFinished(Purchase item);
 
-		void OnGetPurchasesFinished(string allRawSKU , int length);
+		void OnGetPurchasesFinished(string allRawJson , int length);
 
 		void OnSetupSuccessful();
 
@@ -25,8 +25,6 @@ namespace CafeBazarIab
 		void OnSubscriptionNotAvilable(string message, StoreErrorCodes errorCode , ShopItem item = null);
 		
 		void OnFailedToConsumePurchase(string message, StoreErrorCodes errorCode , ShopItem item = null);
-		
-		void OnConsumeFinishedListenerError(string message, StoreErrorCodes errorCode , ShopItem item = null);
 		
 		void OnPurchaseFailed(string message, StoreErrorCodes errorCode , ShopItem item = null);
 		
